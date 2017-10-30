@@ -1,1 +1,17 @@
-Podstawowe informacje.
+
+obecna sytuacja:
+300 serwerow c3.4xlarge 
+cena godziny/serwera zarezerwowanego c3.4xlarge 0.42
+c3.4xlarge przetwarza 100 user/min
+
+swieta:
+prognoza: avg = 40000 osob na minute z sd dev = 5000
+serwery on demand w cenie 0.84
+zakupy serwerow spot - cena wynika z aukcji
+
+zysk 0.00021 za minute danych
+
+decyzje:
+ile serwerow on-demand
+ile serwerow spot
+jaki bid
