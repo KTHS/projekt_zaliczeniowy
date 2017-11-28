@@ -92,7 +92,7 @@ class Ec2Simulator(object):
         warmup_no = 1
         
         if request_time_s == None and request_sim_runs == None:
-            request_time_s = (end_datetime-t0).total_seconds
+            request_time_s = (end_datetime-t0).total_seconds()
         else:
             if request_time_s == None:
                 request_time_s = request_sim_runs * single_sim_time_s
