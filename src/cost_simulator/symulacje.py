@@ -12,6 +12,9 @@ os.chdir("D:/Big Data/projekt zaliczeniowy Python/")
 import datetime
 import ec2_spot_pricing_simulator as ecs
 
+import importlib
+importlib.reload(ecs)
+
 start = datetime.datetime.strptime(\
 "2017-11-09 7:00:00","%Y-%m-%d %H:%M:%S")
 end = datetime.datetime.strptime(\
