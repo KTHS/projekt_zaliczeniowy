@@ -76,28 +76,31 @@ class Ec2Simulator(object):
         
     # simulation time - poprawić żeby liczyło dokładnie koszyt za czas symulacji
     # co jesli czas symulacji wyjdzie poza historie?
+        
+    # check date parameters
+        if start_datetime < min(i
+            for i in self.timestamps) or start_datetime > end_datetime:
+          raise ValueError('Wrong date parameter')
+
+        if end_datetime > self.timestamps[0]:
+          raise ValueError('Wrong end date parameter') 
     
         # initial values
-        cost = 0
-        
+        cost = 0        
         t0 = start_datetime
-                        
-        # simulation time
-        
-        if end_datetime == None:
-            end_datetime = self.timestamps[0] #jesli nie podano czasu zakonczenia przyjmujemy ostatni dostepny w historii
-        
         end_of_sim = False
         server_working_time = 0
-        warmup_no = 1
+        warmup_no = 1                       
+
+        # simulation time       
+        if end_datetime == None:
+            end_datetime = self.timestamps[0] #jesli nie podano czasu zakonczenia przyjmujemy ostatni dostepny w historii
         
         if request_time_s == None and request_sim_runs == None:
             request_time_s = (end_datetime-t0).total_seconds()
         else:
             if request_time_s == None:
-                request_time_s = request_sim_runs * single_sim_time_s
-            
-        
+                request_time_s = request_sim_runs * single_sim_time_s                 
     
         # cost calculation
         while t0 < end_datetime and not end_of_sim:
@@ -114,19 +117,15 @@ class Ec2Simulator(object):
                 if stop_on_terminate:
                     end_datetime = t0
                 else:
+                    print("termination")
                     server_working_time = server_working_time + (self._terminate(t0,bid_price)['start'] - t0).total_seconds()
-                    warmup_no += 1
+                    warmup_no = 1
                     t0 = self._terminate(t0,bid_price)['end']
             if server_working_time >= request_time_s:
                 end_of_sim = True
+            print(cost,"\n")    
 
-        # cost calculation of last hour        
-        if use_full_last_hour:
-            if not self._terminate(t0,bid_price)['status']:
-                cost += self._get_spot(t0)
-        else:
-            cost += self._get_spot(t0) * (end_datetime-t0).total_seconds()/3600
-            
+           
       
         return cost
         
