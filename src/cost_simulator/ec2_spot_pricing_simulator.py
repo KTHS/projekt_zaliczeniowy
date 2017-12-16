@@ -68,7 +68,16 @@ class Ec2Simulator(object):
           
         return {'status':status, 'start':start ,'end':end }
         
-    
+    def _get_status_list_vector(self,start, end, status_list):
+        n_of_min = (end - start).total_seconds()/60    
+        server_avail_min = numpy.full(int(n_of_min),1)
+        for i in status_list:
+            if i['status']:
+                index_start = int((i['start']-start).total_seconds()/60)
+                index_end = int((i['end']-start).total_seconds()/60)
+                for j in range(index_start,index_end):
+                    server_avail_min[j] = 0
+        return server_avail_min  
     
     
     def estimate_cost_d (self, bid_price, zone_machine, start_datetime, end_datetime=None,
@@ -129,6 +138,7 @@ class Ec2Simulator(object):
                 end_of_sim = True
             print(cost,"\n")    
 
-        result = (status_list,cost)
+        status_list_vec = self._get_status_list_vector(start_datetime, self.timestamps[0], status_list)
+        result = (cost, status_list,status_list_vec)
         return result
         
