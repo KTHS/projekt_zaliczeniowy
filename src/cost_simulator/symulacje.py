@@ -25,5 +25,5 @@ result = sim.estimate_cost_d(0.25,(\
 "us-east-1a","c3.large"),\
 start,end,single_sim_time_s=3600)
 
-print("--------- \nCost = ", result[1])
+print("--------- \nCost = ", result[0])
 print("---------")
