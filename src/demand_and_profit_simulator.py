@@ -8,6 +8,10 @@ Created on Thu Dec 14 14:16:31 2017
 #%%
 
 #initial values
+start = datetime.datetime.strptime(\
+"2017-11-28 2:00:00","%Y-%m-%d %H:%M:%S")
+end = datetime.datetime.strptime(\
+"2017-11-28 6:00:00","%Y-%m-%d %H:%M:%S")
 
 ec2_od = 300 #amount of on-demand servers
 ec2_price_od_old = 0.42 #price of existing on-demand servers, per server per hour
@@ -24,7 +28,6 @@ ec2_price_od = 0.84 #current price of new on-demand servers, per server per hour
 ec2_od_new = 0
 ec2_spot = 0
 
-sim_length_days = 3 # how many days in simulation
 
 
 #%%
@@ -34,7 +37,7 @@ import numpy as np
 
 np.random.seed(1)
 
-sim_length_minutes = sim_length_days * 24 * 60 #how many minutes in simulation
+sim_length_minutes = int((end - start).total_seconds()/60) #how many minutes in simulation
 n_of_sim = 100 #number of demand simulation
 
 #one row of array per one simulation, eg. one row = 3 days*24h*60 minutes of datapoints 
