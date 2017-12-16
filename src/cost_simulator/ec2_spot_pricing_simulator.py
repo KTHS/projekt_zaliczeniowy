@@ -76,8 +76,17 @@ class Ec2Simulator(object):
         
     # simulation time - poprawić żeby liczyło dokładnie koszyt za czas symulacji
     # co jesli czas symulacji wyjdzie poza historie?
+
+        # simulation time       
+        if end_datetime == None:
+            end_datetime = self.timestamps[0] #jesli nie podano czasu zakonczenia przyjmujemy ostatni dostepny w historii
         
-    # check date parameters
+        if request_time_s == None and request_sim_runs == None:
+            request_time_s = (end_datetime-t0).total_seconds()
+        else:
+            if request_time_s == None:
+                request_time_s = request_sim_runs * single_sim_time_s                     
+        # check date parameters
         if start_datetime < min(i
             for i in self.timestamps) or start_datetime > end_datetime:
           raise ValueError('Wrong date parameter')
@@ -93,15 +102,7 @@ class Ec2Simulator(object):
         warmup_no = 1
         status_list = []                       
 
-        # simulation time       
-        if end_datetime == None:
-            end_datetime = self.timestamps[0] #jesli nie podano czasu zakonczenia przyjmujemy ostatni dostepny w historii
-        
-        if request_time_s == None and request_sim_runs == None:
-            request_time_s = (end_datetime-t0).total_seconds()
-        else:
-            if request_time_s == None:
-                request_time_s = request_sim_runs * single_sim_time_s                 
+    
     
         # cost calculation
         while t0 < end_datetime and not end_of_sim:
