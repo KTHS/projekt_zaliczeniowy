@@ -6,6 +6,7 @@ Created on Thu Nov 09 16:12:55 2017
 
 """
 import datetime
+import numpy
 
 class Ec2Simulator(object):
     def __init__(self, history_file=None):
