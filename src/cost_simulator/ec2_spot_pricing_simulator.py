@@ -90,7 +90,8 @@ class Ec2Simulator(object):
         t0 = start_datetime
         end_of_sim = False
         server_working_time = 0
-        warmup_no = 1                       
+        warmup_no = 1
+        status_list = []                       
 
         # simulation time       
         if end_datetime == None:
@@ -106,7 +107,9 @@ class Ec2Simulator(object):
         while t0 < end_datetime and not end_of_sim:
             print(cost)
             print(t0)
-            if not self._terminate(t0,bid_price)['status']:
+            terminate = self._terminate(t0,bid_price)
+            status_list.append(self._terminate(t0,bid_price))
+            if not terminate['status']:
                 print(self._get_spot(t0))
                 cost += self._get_spot(t0)
                 t0 = t0 + datetime.timedelta(hours=1)
@@ -118,14 +121,13 @@ class Ec2Simulator(object):
                     end_datetime = t0
                 else:
                     print("termination")
-                    server_working_time = server_working_time + (self._terminate(t0,bid_price)['start'] - t0).total_seconds()
+                    server_working_time = server_working_time + (terminate['start'] - t0).total_seconds()
                     warmup_no = 1
-                    t0 = self._terminate(t0,bid_price)['end']
+                    t0 = terminate['end']
             if server_working_time >= request_time_s:
                 end_of_sim = True
             print(cost,"\n")    
 
-           
-      
-        return cost
+        result = (status_list,cost)
+        return result
         
