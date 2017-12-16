@@ -54,7 +54,7 @@ class Ec2Simulator(object):
         if bid < max([self.history[i].price for i in range(self.timestamps.index(oldest),self.timestamps.index(youngest)+1)]):
             status = True
             sindex = max(i for i in range(self.timestamps.index(oldest),self.timestamps.index(youngest)+1) if self.history[i].price > bid)
-            start = self.timestamps[sindex]
+            start = self.timestamps[sindex] + datetime.timedelta(seconds=120)
             
             if bid > min([self.history[i].price for i in range(0,sindex+1)]):    
                 eindex = max(i for i in range(0,sindex+1) if self.history[i].price <= bid)
