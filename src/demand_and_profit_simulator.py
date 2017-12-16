@@ -13,7 +13,7 @@ ec2_od = 300 #amount of on-demand servers
 ec2_price_od_old = 0.42 #price of existing on-demand servers, per server per hour
 users_per_server = 100 # how many users for one server
 
-revenue = 0.   #per server per minute
+revenue = 0.00021   #per server per minute
 
 demand_avg = 40000 #users per minute
 demand_std_dev = 5000
