@@ -20,9 +20,10 @@ start = datetime.datetime.strptime(\
 end = datetime.datetime.strptime(\
 "2017-11-09 15:00:00","%Y-%m-%d %H:%M:%S")
 
-sim = ecs.Ec2Simulator('ceny_spot.txt')
-cost = sim.estimate_cost_d(0.23,(\
+sim = ecs.Ec2Simulator('ceny_spot_bcp.txt')
+result = sim.estimate_cost_d(0.25,(\
 "us-east-1a","c3.large"),\
 start,end,single_sim_time_s=3600)
 
-print("--------- \nCost = ", cost)
+print("--------- \nCost = ", result[1])
+print("---------")
