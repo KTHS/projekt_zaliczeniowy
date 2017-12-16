@@ -51,6 +51,14 @@ user_demand = np.reshape(user_demand, (n_of_sim, sim_length_minutes))
 # number of simulations = amount of 'user demand' time series 
 # result is a list of lists: list of total profits and list of how many users were denied access (demand > servers capacity)
 
+#%%    
+def minimum_from_arrays(a,b):        
+    c = []
+    for i in range(np.size(a)):
+        c.append(min(a[i],b[i])) 
+    return c
+
+#%%    
 def first_scenario(user_demand,ec2_od_new):
     results = []
     for i in range(0, n_of_sim):
@@ -79,9 +87,3 @@ for j in range(0, 360, 10):
     print("new on demand server amount =",j," | average total profit =", 
       avg_res[0],"| average amount of access denials", avg_res[1],)
     
-#%%    
-def minimum_from_arrays(a,b):        
-    c = []
-    for i in range(np.size(a)):
-        c.append(min(a[i],b[i])) 
-    return c
