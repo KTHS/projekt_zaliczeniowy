@@ -55,7 +55,7 @@ class Ec2Simulator(object):
         if bid < max([self.history[i].price for i in range(self.timestamps.index(oldest),self.timestamps.index(youngest)+1)]):
             status = True
             sindex = max(i for i in range(self.timestamps.index(oldest),self.timestamps.index(youngest)+1) if self.history[i].price > bid)
-            start = self.timestamps[sindex] + datetime.timedelta(seconds=120)
+            start = self.timestamps[sindex] + datetime.timedelta(seconds=120) #two min notice
             
             if bid > min([self.history[i].price for i in range(0,sindex+1)]):    
                 eindex = max(i for i in range(0,sindex+1) if self.history[i].price <= bid)
@@ -70,12 +70,14 @@ class Ec2Simulator(object):
         return {'status':status, 'start':start ,'end':end }
         
     def _get_status_list_vector(self,start, end, status_list):
-        n_of_min = (end - start).total_seconds()/60    
+        n_of_min = (end - start).total_seconds()/60   
         server_avail_min = numpy.full(int(n_of_min),1)
+        server_avail_min[0] = 0
+        server_avail_min[1] = 0
         for i in status_list:
             if i['status']:
                 index_start = int((i['start']-start).total_seconds()/60)
-                index_end = int((i['end']-start).total_seconds()/60)
+                index_end = int((i['end']-start).total_seconds()/60)+2 #2 min startup time, TODO - if > endtime
                 for j in range(index_start,index_end):
                     server_avail_min[j] = 0
         return server_avail_min  
@@ -114,12 +116,12 @@ class Ec2Simulator(object):
                      
         # cost calculation
         while t0 < end_datetime and not end_of_sim:
-            print(cost)
-            print(t0)
+  #          print(cost)
+  #          print(t0)
             terminate = self._terminate(t0,bid_price)
             status_list.append(self._terminate(t0,bid_price))
             if not terminate['status']:
-                print(self._get_spot(t0))
+  #              print(self._get_spot(t0))
                 cost += self._get_spot(t0)
                 t0 = t0 + datetime.timedelta(hours=1)
                 server_working_time = server_working_time + 3600 - warmup_no * warmup_time_s
@@ -129,15 +131,15 @@ class Ec2Simulator(object):
                 if stop_on_terminate:
                     end_datetime = t0
                 else:
-                    print("termination")
+  #                  print("termination")
                     server_working_time = server_working_time + (terminate['start'] - t0).total_seconds()
                     warmup_no = 1
                     t0 = terminate['end']
             if server_working_time >= request_time_s:
                 end_of_sim = True
-            print(cost,"\n")    
-
-        status_list_vec = self._get_status_list_vector(start_datetime, self.timestamps[0], status_list)
+  #          print(cost,"\n")    
+        status_list_vec = self._get_status_list_vector(start_datetime, end_datetime, status_list)
         result = (cost, status_list,status_list_vec)
+        #print(status_list_vec)
         return result
         
