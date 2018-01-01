@@ -16,14 +16,19 @@ import importlib
 importlib.reload(ecs)
 
 start = datetime.datetime.strptime(\
-"2017-11-28 2:00:00","%Y-%m-%d %H:%M:%S")
+"2017-11-21 10:00:00","%Y-%m-%d %H:%M:%S")
 end = datetime.datetime.strptime(\
-"2017-11-28 15:00:00","%Y-%m-%d %H:%M:%S")
+"2017-11-21 20:00:00","%Y-%m-%d %H:%M:%S")
 
 sim = ecs.Ec2Simulator('ceny_spot.txt')
-result = sim.estimate_cost_d(0.245,(\
+result = sim.estimate_cost_d(0.29,(\
 "us-east-1a","c3.large"),\
 start,end,single_sim_time_s=3600)
 
 print("--------- \nCost = ", result[0])
 print("---------")
+print(result[1])
+print("---------")
+print(result[2])
+
+
