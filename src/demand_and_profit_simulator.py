@@ -8,6 +8,7 @@ Created on Thu Dec 14 14:16:31 2017
 #%%
 #libraries and initial values
 
+
 import os
 import importlib
 import datetime
@@ -21,12 +22,15 @@ start = datetime.datetime.strptime(\
 end = datetime.datetime.strptime(\
 "2017-11-21 20:00:00","%Y-%m-%d %H:%M:%S")
 
+
 ec2_od = 300 #amount of on-demand servers, already bought
 ec2_price_od_old = 0.42 #price of existing on-demand servers, per server per hour
 users_per_server = 100 # how many users for one server
+
 revenue = 0.00021   #per server per minute
 demand_avg = 40000 #users per minute, average
 demand_std_dev = 5000 #standard deviation
+
 ec2_price_od = 0.84 #current price of new on-demand servers, per server per hour
 
 # how many new on demand servers, how many spot servers?
@@ -35,12 +39,14 @@ ec2_od_new = 0
 ec2_spot = 0
 n_of_sim = 100 #number of simulations
 
+
 #%%    
 def minimum_from_arrays(a,b):        
     c = []
     for i in range(np.size(a)):
         c.append(min(a[i],b[i])) 
     return c
+
 
 #%%    
 # scenario "only on demand servers", could be a baseline
@@ -120,6 +126,7 @@ for j in range(0, 360, 10):
     print("additional spot servers =",j," | avg tot. profit =", 
       avg_res[0],"| avg amount of denials", avg_res[1],)
 
+
 #%%
 import numpy
 
@@ -192,5 +199,5 @@ for j in range(0, 360, 10):
     print("additional spot/on-demand servers =",j," | avg tot. profit =", 
       avg_res[0],"| avg amount of denials", avg_res[1],)
 
-
 #%%
+
