@@ -8,28 +8,28 @@ Created on Thu Dec 14 14:16:31 2017
 #%%
 #libraries and initial values
 
-
 import os
+os.chdir("C:/pth/")
+
 import importlib
 import datetime
 import numpy as np
-os.chdir("C:/pth/")
 import ec2_spot_pricing_simulator as ecs
 importlib.reload(ecs)
 
+# simulation start and end dates
 start = datetime.datetime.strptime(\
 "2017-11-21 10:00:00","%Y-%m-%d %H:%M:%S")
 end = datetime.datetime.strptime(\
 "2017-11-21 20:00:00","%Y-%m-%d %H:%M:%S")
-
 
 ec2_od = 300 #amount of on-demand servers, already bought
 ec2_price_od_old = 0.42 #price of existing on-demand servers, per server per hour
 users_per_server = 100 # how many users for one server
 
 revenue = 0.00021   #per server per minute
-demand_avg = 40000 #users per minute, average
-demand_std_dev = 5000 #standard deviation
+demand_avg = 40000 #users per minute, avg, preditcion
+demand_std_dev = 5000 #users per minute, standard dev, preditcion
 
 ec2_price_od = 0.84 #current price of new on-demand servers, per server per hour
 
@@ -37,6 +37,7 @@ ec2_price_od = 0.84 #current price of new on-demand servers, per server per hour
 # inital values
 ec2_od_new = 0
 ec2_spot = 0
+
 n_of_sim = 100 #number of simulations
 
 
@@ -47,9 +48,8 @@ def minimum_from_arrays(a,b):
         c.append(min(a[i],b[i])) 
     return c
 
-
 #%%    
-# scenario "only on demand servers", could be a baseline
+# scenario "only on demand servers"
 def first_scenario(start,end,demand_avg,demand_std_dev,n_of_sim,ec2_od_new):
     sim_length_minutes = int((end - start).total_seconds()/60) #how many minutes in simulation
     #simulate user demand
@@ -95,8 +95,8 @@ def second_scenario(start,end,demand_avg,demand_std_dev,n_of_sim,ec2_spot):
     user_demand = np.ceil(user_demand)
     user_demand = np.reshape(user_demand, (n_of_sim, sim_length_minutes))
     #simulate spot instances       
-    sim = ecs.Ec2Simulator('ceny_spot.txt')
-    sim_res = sim.estimate_cost_d(0.29,start,end,single_sim_time_s=3600)    
+    sim = ecs.Ec2Simulator('ceny_spot_sim.txt')
+    sim_res = sim.estimate_cost_d(0.26,start,end,single_sim_time_s=3600)    
     #server capacity
     servers_capacity = np.full(sim_length_minutes, ec2_od*users_per_server) #server "capacity", in users, per minute
     servers_capacity = servers_capacity + sim_res[2]*ec2_spot*users_per_server    
@@ -118,13 +118,20 @@ def second_scenario(start,end,demand_avg,demand_std_dev,n_of_sim,ec2_spot):
         #print(i, "| profit = ",profit_total, "| denied access = ",users_not_served_total)
         res = [profit_total, users_not_served_total]
         results.append(res)
-    return results
+    return (results,sim_res[2],sim_length_minutes)
 
 for j in range(0, 360, 10):
     res = second_scenario(start,end,demand_avg,demand_std_dev,n_of_sim,j)
-    avg_res = np.array(res).mean(axis=0)
+    avg_res = np.array(res[0]).mean(axis=0)
     print("additional spot servers =",j," | avg tot. profit =", 
       avg_res[0],"| avg amount of denials", avg_res[1],)
+
+spot_min = np.sum(res[1])
+sim_min = res[2]
+
+print("---")
+print("Spot servers were working for", spot_min, "minutes (",spot_min/sim_min*100,"% of simulation time)")
+print("For", sim_min-spot_min, "minutes only 300 on-demand servers were working (",(sim_min-spot_min)/sim_min*100,"% of simulation time)")
 
 
 #%%
@@ -137,6 +144,7 @@ def add_on_demand_instances(spot_avail):
     res_vector = np.minimum(numpy.zeros_like(spot_avail),res_vector)
     tmp = numpy.absolute(spot_avail-1)
     res_vector = tmp + numpy.roll(res_vector,1) + numpy.roll(res_vector,2)
+    res_vector = np.maximum(numpy.zeros_like(spot_avail),res_vector)
     res_vector[0] = 0
     res_vector[1] = 0
     # cost
@@ -165,13 +173,15 @@ def third_scenario(start,end,demand_avg,demand_std_dev,n_of_sim,ec2_spot):
     user_demand = np.ceil(user_demand)
     user_demand = np.reshape(user_demand, (n_of_sim, sim_length_minutes))       
     #simulate spot instances
-    sim = ecs.Ec2Simulator('ceny_spot.txt')
-    sim_res = sim.estimate_cost_d(0.29,start,end,single_sim_time_s=3600)    
+    sim = ecs.Ec2Simulator('ceny_spot_sim.txt')
+    sim_res = sim.estimate_cost_d(0.235,start,end,single_sim_time_s=3600)    
     #simulate server capacity
     servers_capacity = np.full(sim_length_minutes, ec2_od*users_per_server) #server "capacity", in users, per minute
     servers_capacity = servers_capacity + sim_res[2]*ec2_spot*users_per_server #on-demand plus spot servers   
     new_on_demand_instances = add_on_demand_instances(sim_res[2])
+    #print(sim_res[2])
     new_on_demand_servers = new_on_demand_instances[0]
+    #print(new_on_demand_servers)
     servers_capacity = servers_capacity  + new_on_demand_servers*ec2_spot*users_per_server #on-demand plus spot plus new on-demand
     #costs
     od_server_costs = ec2_price_od_old * ec2_od * sim_length_minutes / 60
@@ -191,13 +201,23 @@ def third_scenario(start,end,demand_avg,demand_std_dev,n_of_sim,ec2_spot):
         #print(i, "| profit = ",profit_total, "| denied access = ",users_not_served_total)
         res = [profit_total, users_not_served_total]
         results.append(res)
-    return results
+    return (results,sim_res[2],new_on_demand_servers,sim_length_minutes)
 
-for j in range(0, 360, 10):
-    res = third_scenario(start,end,demand_avg,demand_std_dev,n_of_sim,j)
-    avg_res = np.array(res).mean(axis=0)
+for j in range(0, 50, 10):
+    res  = third_scenario(start,end,demand_avg,demand_std_dev,n_of_sim,j)
+    avg_res = np.array(res[0]).mean(axis=0)
     print("additional spot/on-demand servers =",j," | avg tot. profit =", 
       avg_res[0],"| avg amount of denials", avg_res[1],)
+
+spot_min = np.sum(res[1])
+nod_min = np.sum(res[2])
+sim_min = res[3]
+
+print("---")
+print("Spot servers were working for", spot_min, "minutes (",spot_min/sim_min*100,"% of simulation time)")
+print("Additional on demand servers were working for", nod_min, "minutes (",nod_min/sim_min*100,"% of simulation time)")
+print("For", sim_min-nod_min-spot_min, "minutes only 300 on-demand servers were working (",(sim_min-nod_min-spot_min)/sim_min*100,"% of simulation time)")
+
 
 #%%
 
