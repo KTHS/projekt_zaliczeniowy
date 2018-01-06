@@ -6,6 +6,7 @@ Created on Thu Nov 09 16:12:55 2017
 
 """
 import datetime
+import numpy
 
 class Ec2Simulator(object):
     def __init__(self, history_file=None):
@@ -54,7 +55,7 @@ class Ec2Simulator(object):
         if bid < max([self.history[i].price for i in range(self.timestamps.index(oldest),self.timestamps.index(youngest)+1)]):
             status = True
             sindex = max(i for i in range(self.timestamps.index(oldest),self.timestamps.index(youngest)+1) if self.history[i].price > bid)
-            start = self.timestamps[sindex]
+            start = self.timestamps[sindex] + datetime.timedelta(seconds=120) #two min notice
             
             if bid > min([self.history[i].price for i in range(0,sindex+1)]):    
                 eindex = max(i for i in range(0,sindex+1) if self.history[i].price <= bid)
@@ -68,43 +69,59 @@ class Ec2Simulator(object):
           
         return {'status':status, 'start':start ,'end':end }
         
+    def _get_status_list_vector(self,start, end, status_list):
+        n_of_min = (end - start).total_seconds()/60   
+        server_avail_min = numpy.full(int(n_of_min),1)
+        server_avail_min[0] = 0
+        server_avail_min[1] = 0
+        for i in status_list:
+            if i['status']:
+                index_start = int((i['start']-start).total_seconds()/60)
+                index_end = int((i['end']-start).total_seconds()/60)+2 #2 min startup time, TODO - if > endtime
+                for j in range(index_start,min(index_end,len(server_avail_min))):
+                    server_avail_min[j] = 0
+        return server_avail_min  
     
     
-    
-    def estimate_cost_d (self, bid_price, zone_machine, start_datetime, end_datetime=None,
+    def estimate_cost_d (self, bid_price, start_datetime, end_datetime=None,
     warmup_time_s=0,request_time_s=None,request_sim_runs=None,single_sim_time_s=1,use_full_last_hour=True,stop_on_terminate = False):
         
     # simulation time - poprawić żeby liczyło dokładnie koszyt za czas symulacji
     # co jesli czas symulacji wyjdzie poza historie?
     
         # initial values
-        cost = 0
-        
+        cost = 0        
         t0 = start_datetime
-                        
-        # simulation time
-        
-        if end_datetime == None:
-            end_datetime = self.timestamps[0] #jesli nie podano czasu zakonczenia przyjmujemy ostatni dostepny w historii
-        
         end_of_sim = False
         server_working_time = 0
         warmup_no = 1
+        status_list = []
+        
+        # simulation time       
+        if end_datetime == None:
+            end_datetime = self.timestamps[0] #jesli nie podano czasu zakonczenia przyjmujemy ostatni dostepny w historii
         
         if request_time_s == None and request_sim_runs == None:
             request_time_s = (end_datetime-t0).total_seconds()
         else:
             if request_time_s == None:
-                request_time_s = request_sim_runs * single_sim_time_s
-            
-        
-    
+                request_time_s = request_sim_runs * single_sim_time_s                     
+        # check date parameters
+        if start_datetime < min(i
+            for i in self.timestamps) or start_datetime > end_datetime:
+          raise ValueError('Wrong date parameter')
+
+        if end_datetime > self.timestamps[0]:
+          raise ValueError('Wrong end date parameter') 
+                     
         # cost calculation
         while t0 < end_datetime and not end_of_sim:
-            print(cost)
-            print(t0)
-            if not self._terminate(t0,bid_price)['status']:
-                print(self._get_spot(t0))
+  #          print(cost)
+  #          print(t0)
+            terminate = self._terminate(t0,bid_price)
+            status_list.append(self._terminate(t0,bid_price))
+            if not terminate['status']:
+  #              print(self._get_spot(t0))
                 cost += self._get_spot(t0)
                 t0 = t0 + datetime.timedelta(hours=1)
                 server_working_time = server_working_time + 3600 - warmup_no * warmup_time_s
@@ -114,19 +131,15 @@ class Ec2Simulator(object):
                 if stop_on_terminate:
                     end_datetime = t0
                 else:
-                    server_working_time = server_working_time + (self._terminate(t0,bid_price)['start'] - t0).total_seconds()
-                    warmup_no += 1
-                    t0 = self._terminate(t0,bid_price)['end']
+  #                  print("termination")
+                    server_working_time = server_working_time + (terminate['start'] - t0).total_seconds()
+                    warmup_no = 1
+                    t0 = terminate['end']
             if server_working_time >= request_time_s:
                 end_of_sim = True
-
-        # cost calculation of last hour        
-        if use_full_last_hour:
-            if not self._terminate(t0,bid_price)['status']:
-                cost += self._get_spot(t0)
-        else:
-            cost += self._get_spot(t0) * (end_datetime-t0).total_seconds()/3600
-            
-      
-        return cost
+  #          print(cost,"\n")    
+        status_list_vec = self._get_status_list_vector(start_datetime, end_datetime, status_list)
+        result = (cost, status_list,status_list_vec)
+        #print(status_list_vec)
+        return result
         
