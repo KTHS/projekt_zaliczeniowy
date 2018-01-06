@@ -42,6 +42,7 @@ n_minutes = int(t1.total_seconds()/60)
 #%%
 #n_minutes = 16*60
 spot = []
+random.seed(10)
 spot.append(random.choice(prices))
 for i in range(0,n_minutes):
     spot.append(spot[-1]+random.choice(history_diff_non_zero))
