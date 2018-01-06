@@ -15,7 +15,7 @@ from collections import namedtuple
 #%%
 history = []
 HistoryRow = namedtuple('HistoryRow', ['timestamp', 'price'])
-history_file = 'd:/Big Data/projekt zaliczeniowy Python/ceny_spot_all.txt'
+history_file = 'C:/pth/ceny_spot_all.txt'
 with open(history_file, "r") as f:
     file = csv.DictReader(f, delimiter='\t')
     for row in file:
@@ -31,7 +31,16 @@ prices = [h.price for h in history_sorted]
 history_diff = np.diff(prices)
 history_diff_non_zero = [h for h in history_diff if h!=0]
 #%%
-n_minutes = 16*60
+start_date = datetime.datetime.strptime(\
+"2017-11-21 4:00:00","%Y-%m-%d %H:%M:%S")
+end_date = datetime.datetime.strptime(\
+"2017-11-21 20:00:00","%Y-%m-%d %H:%M:%S")
+
+t1 = end_date-start_date
+n_minutes = int(t1.total_seconds()/60)
+
+#%%
+#n_minutes = 16*60
 spot = []
 spot.append(random.choice(prices))
 for i in range(0,n_minutes):
@@ -47,6 +56,22 @@ plt.show()
 
 #%%
 hist_day_diff = np.diff(prices_day)
-plt.plot(hist_day_diff)
+plt.plot(hist_day_diff) 
 plt.show()
 
+#%%
+import csv
+ofile =  open('C:/pth/ceny_spot_sim.txt', "w")
+ofilewriter = csv.writer(ofile, delimiter='\t')
+ofilewriter.writerow(['time','zone','type','price'])
+format = "%Y-%m-%dT%H:%M:%S.%fZ"
+
+for i in reversed(range(len(spot))):
+    t1 = start_date+datetime.timedelta(seconds=60*i)
+    t2 = t1.strftime(format)
+    ofilewriter.writerow([\
+        t2, "sim",\
+        "sim",spot[i]])
+ofile.close()
+
+#%%
