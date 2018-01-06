@@ -8,7 +8,6 @@ Created on Wed Jan  3 22:24:55 2018
 import random
 import matplotlib.pyplot as plt
 import numpy as np
-import random
 import datetime
 import csv
 from collections import namedtuple
