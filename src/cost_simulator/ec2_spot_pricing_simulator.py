@@ -78,7 +78,7 @@ class Ec2Simulator(object):
             if i['status']:
                 index_start = int((i['start']-start).total_seconds()/60)
                 index_end = int((i['end']-start).total_seconds()/60)+2 #2 min startup time, TODO - if > endtime
-                for j in range(index_start,index_end):
+                for j in range(index_start,min(index_end,len(server_avail_min))):
                     server_avail_min[j] = 0
         return server_avail_min  
     
