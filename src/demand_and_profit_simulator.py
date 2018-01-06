@@ -166,7 +166,7 @@ def third_scenario(start,end,demand_avg,demand_std_dev,n_of_sim,ec2_spot):
     user_demand = np.reshape(user_demand, (n_of_sim, sim_length_minutes))       
     #simulate spot instances
     sim = ecs.Ec2Simulator('ceny_spot.txt')
-    sim_res = sim.estimate_cost_d(0.29,("us-east-1a","c3.large"),start,end,single_sim_time_s=3600)    
+    sim_res = sim.estimate_cost_d(0.29,start,end,single_sim_time_s=3600)    
     #simulate server capacity
     servers_capacity = np.full(sim_length_minutes, ec2_od*users_per_server) #server "capacity", in users, per minute
     servers_capacity = servers_capacity + sim_res[2]*ec2_spot*users_per_server #on-demand plus spot servers   
