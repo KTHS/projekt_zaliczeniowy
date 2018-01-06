@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-Created on Wed Jan  3 22:24:55 2018
+@author: Kamila Kitowska, Katarzyna Pękala
 
-@author: kamila
 """
 #%%
 import random
