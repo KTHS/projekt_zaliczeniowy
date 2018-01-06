@@ -83,7 +83,7 @@ class Ec2Simulator(object):
         return server_avail_min  
     
     
-    def estimate_cost_d (self, bid_price, zone_machine, start_datetime, end_datetime=None,
+    def estimate_cost_d (self, bid_price, start_datetime, end_datetime=None,
     warmup_time_s=0,request_time_s=None,request_sim_runs=None,single_sim_time_s=1,use_full_last_hour=True,stop_on_terminate = False):
         
     # simulation time - poprawić żeby liczyło dokładnie koszyt za czas symulacji
