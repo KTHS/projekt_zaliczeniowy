@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Thu Dec 14 14:16:31 2017
-
-@author: Katarzyna
+@author: Kamila Kitowska, Katarzyna Pękala
 """
 
 #%%
@@ -40,8 +38,17 @@ ec2_price_od = 0.84 #current price of new on-demand servers, per server per hour
 ec2_od_new = 0
 ec2_spot = 0
 
-n_of_sim = 100 #number of simulations
+n_of_sim = 500 #number of simulations
 
+availability_level = 0.99 # how many users/min must have access
+availability_no_sim = 0.9 # how many simulations must meet avail. level 
+
+bid = 0.25
+
+#spot prices source
+# 1 - simulation
+# 0 - historical
+spot_prices_s = 1
 
 #%%    
 def minimum_from_arrays(a,b):        
@@ -49,6 +56,44 @@ def minimum_from_arrays(a,b):
     for i in range(np.size(a)):
         c.append(min(a[i],b[i])) 
     return c
+
+def is_empty(any_structure):
+    if any_structure:
+        return False
+    else:
+        return True
+
+if spot_prices_s == 1:
+    spot_file = "ceny_spot_sim.txt"
+else:
+    spot_file = "ceny_spot.txt"    
+
+import numpy
+
+def add_on_demand_instances(spot_avail):    
+    # vector of server availibility
+    res_vector = numpy.diff(spot_avail)
+    res_vector = numpy.append(res_vector,0)
+    res_vector = np.minimum(numpy.zeros_like(spot_avail),res_vector)
+    tmp = numpy.absolute(spot_avail-1)
+    res_vector = tmp + numpy.roll(res_vector,1) + numpy.roll(res_vector,2)
+    res_vector = np.maximum(numpy.zeros_like(spot_avail),res_vector)
+    res_vector[0] = 0
+    res_vector[1] = 0
+    # cost
+    cost = 0
+    j = 0
+    for i in range(len(tmp)):
+        if tmp[i] == 1 and j%60==0:
+            cost = cost + 1
+            j = j + 1
+        elif tmp[i] == 1:
+            j = j + 1
+        else:
+            j = 0
+    result = (res_vector,cost)
+    return result
+
 
 #%%    
 # scenario "only on demand servers"
@@ -64,6 +109,7 @@ def first_scenario(start,end,demand_avg,demand_std_dev,n_of_sim,ec2_od_new):
     #costs
     server_costs_hour = ec2_price_od_old * ec2_od + ec2_od_new * ec2_price_od #price of old and new servers, per hour
     server_costs_min = server_costs_hour/60 #price of all on demand servers, per minute      
+    avail_counter = 0
     for i in range(0, n_of_sim):
         #ec2_od_new = np.ceil(max(user_demand[i]-servers_capacity)/100) #how many new on demand servers (based on user demand simulation)      
         diff_capacity_demand = servers_capacity - user_demand[i]
@@ -74,22 +120,38 @@ def first_scenario(start,end,demand_avg,demand_std_dev,n_of_sim,ec2_od_new):
         #profit
         profit_min = revenue_min - server_costs_min # profit per minute
         profit_total = np.sum(profit_min) #total profit in one simulation
-        #print(i, "loop | profit = ",profit_total, "| users denied access = ",users_not_served_total)
-        res = [profit_total, users_not_served_total]
-        results.append(res)
-    return results
+        #print(i, "loop | profit = ",profit_total, "| users denied access = ",users_not_served_total)        
+        avail = (np.sum(user_demand[i])-users_not_served_total)/np.sum(user_demand[i])
+        if avail>=availability_level:
+            avail_counter = avail_counter + 1
+        res = [profit_total, users_not_served_total,avail]       
+        results.append(res)    
+    return (results,avail_counter)
 
 # simulation of first scenario
 # 
 avg_profit = []
 avg_denials = []
-for j in range(0, 360, 10):
+final_result = ()
+for j in range(200, 300, 10):
     res = first_scenario(start,end,demand_avg,demand_std_dev,n_of_sim,j)
-    avg_res = np.array(res).mean(axis=0)
+    avg_res = np.array(res[0]).mean(axis=0)
     avg_profit.append(avg_res[0]) 
     avg_denials.append(avg_res[1]/1000)
     print("additional on-demand servers =",j," | avg total profit =", 
-      avg_res[0],"| avg amount of denials-of-access", avg_res[1],)
+      avg_res[0],"| avg amount of denials-of-access", avg_res[1],
+      "| availability ", avg_res[2]*100,"% | availability cond. counter",res[1])
+    if res[1]/n_of_sim>availability_no_sim and is_empty(final_result):
+        final_result = (avg_res,res[1],j)
+
+if is_empty(final_result):
+    print("\n\nAvailability condition of",availability_level*100,"% in",availability_no_sim*n_of_sim,"out of",n_of_sim,"simulations wasn't satisfied.")
+else:          
+    print("\nFINAL RESULT: \nAdditional on-demand servers =",final_result[2]," | avg total profit =", 
+      final_result[0][0],"| avg amount of denials-of-access", final_result[0][1],
+      "| availability ", final_result[0][2]*100,"% \nIn ",final_result[1],
+      "simulations out of",n_of_sim,"availability condition of",availability_level,"was met.")
+
 #plot
 fig, ax1 = plt.subplots()
 plt.suptitle('First scenario: only on-demand servers')
@@ -123,8 +185,8 @@ def second_scenario(start,end,demand_avg,demand_std_dev,n_of_sim,ec2_spot):
     user_demand = np.ceil(user_demand)
     user_demand = np.reshape(user_demand, (n_of_sim, sim_length_minutes))
     #simulate spot instances       
-    sim = ecs.Ec2Simulator('ceny_spot_sim.txt')
-    sim_res = sim.estimate_cost_d(0.26,start,end,single_sim_time_s=3600)    
+    sim = ecs.Ec2Simulator(spot_file)
+    sim_res = sim.estimate_cost_d(bid,start,end,single_sim_time_s=3600)    
     #server capacity
     servers_capacity = np.full(sim_length_minutes, ec2_od*users_per_server) #server "capacity", in users, per minute
     servers_capacity = servers_capacity + sim_res[2]*ec2_spot*users_per_server    
@@ -133,6 +195,7 @@ def second_scenario(start,end,demand_avg,demand_std_dev,n_of_sim,ec2_spot):
     #costs
     server_costs_hour = ec2_price_od_old * ec2_od + ec2_od_new * ec2_price_od #price of old and new servers, per hour
     server_costs_min = server_costs_hour/60 #price of all on demand servers, per minute      
+    avail_counter = 0
     for i in range(0, n_of_sim):
         #ec2_od_new = np.ceil(max(user_demand[i]-servers_capacity)/100) #how many new on demand servers (based on user demand simulation)      
         diff_capacity_demand = servers_capacity - user_demand[i]
@@ -144,19 +207,38 @@ def second_scenario(start,end,demand_avg,demand_std_dev,n_of_sim,ec2_spot):
         profit_min = revenue_min - server_costs_min # profit per minute
         profit_total = np.sum(profit_min)-sim_res[0]*ec2_spot #total profit in one simulation
         #print(i, "| profit = ",profit_total, "| denied access = ",users_not_served_total)
-        res = [profit_total, users_not_served_total]
+        avail = (np.sum(user_demand[i])-users_not_served_total)/np.sum(user_demand[i])
+        if avail>=availability_level:
+            avail_counter = avail_counter + 1
+        res = [profit_total, users_not_served_total, avail]
         results.append(res)
-    return (results,sim_res[2],sim_length_minutes)
+    return (results,sim_res[2],sim_length_minutes,avail_counter)
 
+
+# simulation of second scenario
+    
 avg_profit = []
 avg_denials = []
-for j in range(0, 360, 10):
+final_result = ()
+for j in range(100, 360, 10):
     res = second_scenario(start,end,demand_avg,demand_std_dev,n_of_sim,j)
     avg_res = np.array(res[0]).mean(axis=0)
     avg_profit.append(avg_res[0]) 
     avg_denials.append(avg_res[1]/1000)
     print("additional spot servers =",j," | avg tot. profit =", 
-      avg_res[0],"| avg amount of denials", avg_res[1],)
+      avg_res[0],"| avg amount of denials", avg_res[1],"| availability ", 
+      avg_res[2]*100,"% | availability cond. counter",res[3])
+    if res[3]/n_of_sim>availability_no_sim and is_empty(final_result):
+        final_result = (avg_res,res[3],j)
+
+if is_empty(final_result):
+    print("\n\nAvailability condition of",availability_level*100,"% in",availability_no_sim*n_of_sim,"out of",n_of_sim,"simulations wasn't satisfied.")
+else:          
+    print("\nFINAL RESULTS: \nadditional spot servers =",final_result[2]," | avg total profit =", 
+      final_result[0][0],"| avg amount of denials-of-access", final_result[0][1],
+      "| availability ", final_result[0][2]*100,"% \nIn ",final_result[1],
+      "simulations out of",n_of_sim,"availability condition of",availability_level,"was met.")
+
 
 spot_min = np.sum(res[1])
 sim_min = res[2]
@@ -188,34 +270,6 @@ ax2.set_ylabel('MM denailas', color='b')
 
 plt.show()
 
-
-#%%
-import numpy
-
-def add_on_demand_instances(spot_avail):    
-    # vector of server availibility
-    res_vector = numpy.diff(spot_avail)
-    res_vector = numpy.append(res_vector,0)
-    res_vector = np.minimum(numpy.zeros_like(spot_avail),res_vector)
-    tmp = numpy.absolute(spot_avail-1)
-    res_vector = tmp + numpy.roll(res_vector,1) + numpy.roll(res_vector,2)
-    res_vector = np.maximum(numpy.zeros_like(spot_avail),res_vector)
-    res_vector[0] = 0
-    res_vector[1] = 0
-    # cost
-    cost = 0
-    j = 0
-    for i in range(len(tmp)):
-        if tmp[i] == 1 and j%60==0:
-            cost = cost + 1
-            j = j + 1
-        elif tmp[i] == 1:
-            j = j + 1
-        else:
-            j = 0
-    result = (res_vector,cost)
-    return result
-
 #%%
 # "old" on demand servers + spot instances + on-demand servers when spot unavaible    
 # on-demand needs 2 min for startup
@@ -228,8 +282,8 @@ def third_scenario(start,end,demand_avg,demand_std_dev,n_of_sim,ec2_spot):
     user_demand = np.ceil(user_demand)
     user_demand = np.reshape(user_demand, (n_of_sim, sim_length_minutes))       
     #simulate spot instances
-    sim = ecs.Ec2Simulator('ceny_spot_sim.txt')
-    sim_res = sim.estimate_cost_d(0.235,start,end,single_sim_time_s=3600)    
+    sim = ecs.Ec2Simulator(spot_file)
+    sim_res = sim.estimate_cost_d(bid,start,end,single_sim_time_s=3600)    
     #simulate server capacity
     servers_capacity = np.full(sim_length_minutes, ec2_od*users_per_server) #server "capacity", in users, per minute
     servers_capacity = servers_capacity + sim_res[2]*ec2_spot*users_per_server #on-demand plus spot servers   
@@ -244,6 +298,7 @@ def third_scenario(start,end,demand_avg,demand_std_dev,n_of_sim,ec2_spot):
     spot_costs = sim_res[0] * ec2_spot
     total_cost = od_server_costs + od_new_servers_costs + spot_costs
     results = []    
+    avail_counter = 0
     for i in range(0, n_of_sim):
         #ec2_od_new = np.ceil(max(user_demand[i]-servers_capacity)/100) #how many new on demand servers (based on user demand simulation)      
         diff_capacity_demand = servers_capacity - user_demand[i]
@@ -254,19 +309,34 @@ def third_scenario(start,end,demand_avg,demand_std_dev,n_of_sim,ec2_spot):
         #profit
         profit_total = np.sum(revenue_min)-total_cost #total profit in one simulation
         #print(i, "| profit = ",profit_total, "| denied access = ",users_not_served_total)
-        res = [profit_total, users_not_served_total]
+        avail = (np.sum(user_demand[i])-users_not_served_total)/np.sum(user_demand[i])
+        if avail>=availability_level:
+            avail_counter = avail_counter + 1
+        res = [profit_total, users_not_served_total, avail]
         results.append(res)
-    return (results,sim_res[2],new_on_demand_servers,sim_length_minutes)
+    return (results,sim_res[2],new_on_demand_servers,sim_length_minutes,avail_counter)
 
 avg_profit = []
 avg_denials = []
-for j in range(0, 50, 10):
+final_result = ()
+for j in range(0, 200, 10):
     res  = third_scenario(start,end,demand_avg,demand_std_dev,n_of_sim,j)
     avg_res = np.array(res[0]).mean(axis=0)
     avg_profit.append(avg_res[0]) 
     avg_denials.append(avg_res[1]/1000)
     print("additional spot/on-demand servers =",j," | avg tot. profit =", 
-      avg_res[0],"| avg amount of denials", avg_res[1],)
+      avg_res[0],"| avg amount of denials", avg_res[1],"| availability ", 
+      avg_res[2]*100,"% | availability cond. counter",res[4])
+    if res[4]/n_of_sim>availability_no_sim and is_empty(final_result):
+        final_result = (avg_res,res[4],j)
+
+if is_empty(final_result):
+    print("\n\nAvailability condition of",availability_level*100,"% in",availability_no_sim*n_of_sim,"out of",n_of_sim,"simulations wasn't satisfied.")
+else:          
+    print("\nFINAL RESULTS: \nAdditional spot servers =",final_result[2]," | avg total profit =", 
+      final_result[0][0],"| avg amount of denials-of-access", final_result[0][1],
+      "| availability ", final_result[0][2]*100,"% \nIn ",final_result[1],
+      "simulations out of",n_of_sim,"availability condition of",availability_level,"was met.")
 
 spot_min = np.sum(res[1])
 nod_min = np.sum(res[2])
@@ -298,4 +368,3 @@ ax2.set_ylabel('MM denailas', color='b')
 plt.show()
 
 #%%
-
