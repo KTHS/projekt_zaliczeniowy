@@ -4,6 +4,7 @@
 
 """
 #%%
+# import libraries
 import random
 import matplotlib.pyplot as plt
 import numpy as np
@@ -12,6 +13,7 @@ import csv
 from collections import namedtuple
 
 #%%
+# import price history
 history = []
 HistoryRow = namedtuple('HistoryRow', ['timestamp', 'price'])
 history_file = 'C:/pth/ceny_spot_all.txt'
@@ -24,12 +26,14 @@ with open(history_file, "r") as f:
 history = [h for h in history if h.timestamp.date() < datetime.date(2017, 11, 28)]
 
 #%%
-
+# create vector of price changes in time
 history_sorted = sorted(history)
 prices = [h.price for h in history_sorted]
 history_diff = np.diff(prices)
 history_diff_non_zero = [h for h in history_diff if h!=0]
+
 #%%
+# start and end datetimes of simulation
 start_date = datetime.datetime.strptime(\
 "2017-11-21 4:00:00","%Y-%m-%d %H:%M:%S")
 end_date = datetime.datetime.strptime(\
@@ -39,6 +43,7 @@ t1 = end_date-start_date
 n_minutes = int(t1.total_seconds()/60)
 
 #%%
+# simulate spot prices and plot them
 #n_minutes = 16*60
 spot = []
 random.seed(10)
@@ -49,17 +54,20 @@ plt.plot(spot)
 plt.show()
     
 #%%
+# plot real prices history 
 import matplotlib.pyplot as plt
 prices_day = [h.price for h in history_sorted if h.timestamp.date() == datetime.date(2017, 11, 6) ]
 plt.plot(prices_day)
 plt.show()
 
 #%%
+# plot real prices changes
 hist_day_diff = np.diff(prices_day)
 plt.plot(hist_day_diff) 
 plt.show()
 
 #%%
+# export simulated prices to file
 import csv
 ofile =  open('C:/pth/ceny_spot_sim.txt', "w")
 ofilewriter = csv.writer(ofile, delimiter='\t')
