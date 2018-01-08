@@ -1,1 +1,1 @@
-Source code for use in this project
+Main file for the project - buziewalbumie_main.py.
