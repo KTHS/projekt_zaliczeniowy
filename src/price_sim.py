@@ -16,7 +16,7 @@ from collections import namedtuple
 # import price history
 history = []
 HistoryRow = namedtuple('HistoryRow', ['timestamp', 'price'])
-history_file = 'C:/pth/ceny_spot_all.txt'
+history_file = 'ceny_spot_all.txt'
 with open(history_file, "r") as f:
     file = csv.DictReader(f, delimiter='\t')
     for row in file:
@@ -24,7 +24,6 @@ with open(history_file, "r") as f:
         history.append(hist)
         
 history = [h for h in history if h.timestamp.date() < datetime.date(2017, 11, 28)]
-
 #%%
 # create vector of price changes in time
 history_sorted = sorted(history)
@@ -69,7 +68,7 @@ plt.show()
 #%%
 # export simulated prices to file
 import csv
-ofile =  open('C:/pth/ceny_spot_sim.txt', "w")
+ofile =  open('ceny_spot_sim.txt', "w")
 ofilewriter = csv.writer(ofile, delimiter='\t')
 ofilewriter.writerow(['time','zone','type','price'])
 format = "%Y-%m-%dT%H:%M:%S.%fZ"
