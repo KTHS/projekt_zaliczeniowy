@@ -10,11 +10,11 @@ conn = boto.ec2.connect_to_region("us-east-1",\
   	aws_secret_access_key=\
 	'cAu8E3zvFXJKGm2uq90i9F229mQLhw+U0uzF2Hex')
 # %%
-start = '2017-11-20T00:00:00.000Z' 
-end = '2017-11-22T00:10:00.000Z'
+import_start_date = '2017-11-27T00:30:00.000Z' 
+import_end_date = '2017-11-28T00:00:00.000Z'
 
 history = conn.get_spot_price_history(
-start_time=start, end_time=end, instance_type="c4.4xlarge",
+start_time=import_start_date, end_time=import_end_date, instance_type="c4.4xlarge",
 product_description="Linux/UNIX",
 availability_zone="us-east-1d")
 
