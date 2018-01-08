@@ -34,9 +34,9 @@ history_diff_non_zero = [h for h in history_diff if h!=0]
 #%%
 # start and end datetimes of simulation
 start_date = datetime.datetime.strptime(\
-"2017-11-21 4:00:00","%Y-%m-%d %H:%M:%S")
+"2017-11-27 00:30:00","%Y-%m-%d %H:%M:%S")
 end_date = datetime.datetime.strptime(\
-"2017-11-21 20:00:00","%Y-%m-%d %H:%M:%S")
+"2017-11-27 23:30:00","%Y-%m-%d %H:%M:%S")
 
 t1 = end_date-start_date
 n_minutes = int(t1.total_seconds()/60)
@@ -54,16 +54,16 @@ plt.show()
     
 #%%
 # plot real prices history 
-import matplotlib.pyplot as plt
-prices_day = [h.price for h in history_sorted if h.timestamp.date() == datetime.date(2017, 11, 6) ]
-plt.plot(prices_day)
-plt.show()
+#import matplotlib.pyplot as plt
+#prices_day = [h.price for h in history_sorted if h.timestamp.date() == datetime.date(2017, 11, 6) ]
+#plt.plot(prices_day)
+#plt.show()
 
 #%%
 # plot real prices changes
-hist_day_diff = np.diff(prices_day)
-plt.plot(hist_day_diff) 
-plt.show()
+#hist_day_diff = np.diff(prices_day)
+#plt.plot(hist_day_diff) 
+#plt.show()
 
 #%%
 # export simulated prices to file
