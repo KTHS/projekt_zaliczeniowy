@@ -51,6 +51,96 @@ if spot_prices_s == 1:
     spot_file = "ceny_spot_sim.txt"
 else:
     spot_file = "ceny_spot.txt"    
+#%%
+#plots definitions
+
+def draw_plot_1():
+
+    fig, ax1 = plt.subplots()
+    plt.suptitle('First scenario: only on-demand servers')
+    max_profit = max(avg_profit)
+    avail_index = avail.index(min([i for i in avail if i>availability_no_sim*n_of_sim]))
+    ax2 = ax1.twinx()
+    ax1.plot(avg_profit,servers_no_range, 'g-')
+    ax1.plot(max_profit,servers_no_range[avg_profit.index(max_profit)],'ro') # max_profit point
+    ax1.annotate((int(max_profit),servers_no_range[avg_profit.index(max_profit)]), \
+                 xy=(max_profit,servers_no_range[avg_profit.index(max_profit)]),xytext=(max_profit-800,servers_no_range[avg_profit.index(max_profit)]), \
+                 arrowprops=dict(facecolor='black', shrink=0.05)) # arrow and max value annotation
+    ax1.plot(avg_profit[avail_index],servers_no_range[avail_index],'go')
+    ax1.annotate((int(avg_profit[avail_index]),servers_no_range[avail_index]), \
+                 xy=(avg_profit[avail_index],servers_no_range[avail_index]),xytext=(avg_profit[avail_index]-600,servers_no_range[avail_index]), \
+                 arrowprops=dict(facecolor='black', shrink=0.05)) #
+    
+    ax2.plot(avg_profit,avg_denials, 'b-')
+    ax2.plot(max_profit,avg_denials[avg_profit.index(max_profit)],'ro') # max_profit point
+    ax2.annotate((int(max_profit),int(avg_denials[avg_profit.index(max_profit)])), \
+                 xy=(max_profit,avg_denials[avg_profit.index(max_profit)]),xytext=(max_profit-800, \
+                  avg_denials[avg_profit.index(max_profit)]),arrowprops=dict(facecolor='black', shrink=0.05)) # arrow and max value annotation
+    
+    ax1.set_xlabel('Avg total profit')
+    ax1.set_ylabel('Number of oo-demand servers', color='g')
+    ax2.set_ylabel('MM denials', color='b')
+    #ax1.set_ylim([140,200])
+    
+    plt.show()
+    
+    return 
+
+def draw_plot_2():
+    fig, ax1 = plt.subplots()
+    plt.suptitle('Second scenario: 300 reserved on-demand servers and spot instances only')
+    
+    
+    ax2 = ax1.twinx()
+    ax1.plot(avg_profit,servers_no_range, 'g-')
+    ax1.plot(max_profit,servers_no_range[avg_profit.index(max_profit)],'ro')
+    ax1.annotate((int(max_profit),servers_no_range[avg_profit.index(max_profit)]), \
+                 xy=(max_profit,servers_no_range[avg_profit.index(max_profit)]),xytext=(max_profit-300, \
+                 servers_no_range[avg_profit.index(max_profit)]),arrowprops=dict(facecolor='black', shrink=0.05))
+    ax1.plot(avg_profit[avail_index],servers_no_range[avail_index],'go')
+    ax1.annotate((int(avg_profit[avail_index]),servers_no_range[avail_index]), \
+                 xy=(avg_profit[avail_index],servers_no_range[avail_index]),xytext=(avg_profit[avail_index]-600,servers_no_range[avail_index]), \
+                 arrowprops=dict(facecolor='black', shrink=0.05)) #
+    
+    ax2.plot(avg_profit,avg_denials, 'b-')
+    ax2.plot(max_profit,avg_denials[avg_profit.index(max_profit)],'ro')
+    ax2.annotate((int(max_profit),int(avg_denials[avg_profit.index(max_profit)])), \
+                 xy=(max_profit,avg_denials[avg_profit.index(max_profit)]), \
+                 xytext=(max_profit-300,avg_denials[avg_profit.index(max_profit)]),arrowprops=dict(facecolor='black', shrink=0.05))
+    
+    ax1.set_xlabel('Avg total profit')
+    ax1.set_ylabel('Number of oo-demand servers', color='g')
+    ax2.set_ylabel('MM denials', color='b')
+    
+    plt.show()
+    return 
+
+def draw_plot_3():
+    fig, ax1 = plt.subplots()
+    
+    plt.suptitle("\n".join(wrap('Third scenario: 300 reserved on-demand servers, spot instances only and on-demand servers when spot unavaible', 60)))
+    
+    max_profit = max(avg_profit)
+    ax2 = ax1.twinx()
+    ax1.plot(avg_profit,servers_no_range, 'g-')
+    ax1.plot(max_profit,servers_no_range[avg_profit.index(max_profit)],'ro')
+    ax1.annotate((int(max_profit),servers_no_range[avg_profit.index(max_profit)]),xy=(max_profit,servers_no_range[avg_profit.index(max_profit)]),xytext=(max_profit-700,servers_no_range[avg_profit.index(max_profit)]),arrowprops=dict(facecolor='black', shrink=0.05))
+    ax1.plot(avg_profit[avail_index],servers_no_range[avail_index],'go')
+    ax1.annotate((int(avg_profit[avail_index]),servers_no_range[avail_index]), \
+                 xy=(avg_profit[avail_index],servers_no_range[avail_index]),xytext=(avg_profit[avail_index]-650,servers_no_range[avail_index]), \
+                 arrowprops=dict(facecolor='black', shrink=0.05)) #
+    
+    ax2.plot(avg_profit,avg_denials, 'b-')
+    ax2.plot(max_profit,avg_denials[avg_profit.index(max_profit)],'ro')
+    ax2.annotate((int(max_profit),int(avg_denials[avg_profit.index(max_profit)])),xy=(max_profit,avg_denials[avg_profit.index(max_profit)]),xytext=(max_profit-700,avg_denials[avg_profit.index(max_profit)]),arrowprops=dict(facecolor='black', shrink=0.05))
+    
+    ax1.set_xlabel('Avg total profit')
+    ax1.set_ylabel('Number of oo-demand servers', color='g')
+    ax2.set_ylabel('MM denials', color='b')
+    
+    plt.show()
+    return
+
 #%%    
 # scenario "only on demand servers"
 
@@ -91,36 +181,9 @@ else:
           "| availability ", final_result[0][2]*100,"% \nIn ",final_result[1],
           "simulations out of",n_of_sim,"availability condition of",
           availability_level,"was met.")
+    draw_plot_1()
 
 #plot
-fig, ax1 = plt.subplots()
-plt.suptitle('First scenario: only on-demand servers')
-max_profit = max(avg_profit)
-avail_index = avail.index(min([i for i in avail if i>availability_no_sim*n_of_sim]))
-ax2 = ax1.twinx()
-ax1.plot(avg_profit,servers_no_range, 'g-')
-ax1.plot(max_profit,servers_no_range[avg_profit.index(max_profit)],'ro') # max_profit point
-ax1.annotate((int(max_profit),servers_no_range[avg_profit.index(max_profit)]), \
-             xy=(max_profit,servers_no_range[avg_profit.index(max_profit)]),xytext=(max_profit-800,servers_no_range[avg_profit.index(max_profit)]), \
-             arrowprops=dict(facecolor='black', shrink=0.05)) # arrow and max value annotation
-ax1.plot(avg_profit[avail_index],servers_no_range[avail_index],'go')
-ax1.annotate((int(avg_profit[avail_index]),servers_no_range[avail_index]), \
-             xy=(avg_profit[avail_index],servers_no_range[avail_index]),xytext=(avg_profit[avail_index]-600,servers_no_range[avail_index]), \
-             arrowprops=dict(facecolor='black', shrink=0.05)) #
-
-ax2.plot(avg_profit,avg_denials, 'b-')
-ax2.plot(max_profit,avg_denials[avg_profit.index(max_profit)],'ro') # max_profit point
-ax2.annotate((int(max_profit),int(avg_denials[avg_profit.index(max_profit)])), \
-             xy=(max_profit,avg_denials[avg_profit.index(max_profit)]),xytext=(max_profit-800, \
-              avg_denials[avg_profit.index(max_profit)]),arrowprops=dict(facecolor='black', shrink=0.05)) # arrow and max value annotation
-
-ax1.set_xlabel('Avg total profit')
-ax1.set_ylabel('Number of oo-demand servers', color='g')
-ax2.set_ylabel('MM denials', color='b')
-#ax1.set_ylim([140,200])
-
-plt.show()
-
     
 #%%
 # simulation of second scenario
@@ -158,6 +221,9 @@ else:
       final_result[0][0],"| avg amount of denials-of-access", final_result[0][1],
       "| availability ", final_result[0][2]*100,"% \nIn ",final_result[1],
       "simulations out of",n_of_sim,"availability condition of",availability_level,"was met.")
+    max_profit = max(avg_profit)
+    avail_index = avail.index(min([i for i in avail if i>availability_no_sim*n_of_sim]))
+    draw_plot_2()
 
 spot_min = np.sum(res[1])
 sim_min = res[2]
@@ -165,37 +231,6 @@ sim_min = res[2]
 print("---")
 print("Spot servers were working for", spot_min, "minutes (",float(spot_min)/sim_min*100,"% of simulation time)")
 print("For", sim_min-spot_min, "minutes only 300 on-demand servers were working (",(sim_min-spot_min)/sim_min*100,"% of simulation time)")
-
-max_profit = max(avg_profit)
-avail_index = avail.index(min([i for i in avail if i>availability_no_sim*n_of_sim]))
-
-#plot
-fig, ax1 = plt.subplots()
-plt.suptitle('Second scenario: 300 reserved on-demand servers and spot instances only')
-
-
-ax2 = ax1.twinx()
-ax1.plot(avg_profit,servers_no_range, 'g-')
-ax1.plot(max_profit,servers_no_range[avg_profit.index(max_profit)],'ro')
-ax1.annotate((int(max_profit),servers_no_range[avg_profit.index(max_profit)]), \
-             xy=(max_profit,servers_no_range[avg_profit.index(max_profit)]),xytext=(max_profit-300, \
-             servers_no_range[avg_profit.index(max_profit)]),arrowprops=dict(facecolor='black', shrink=0.05))
-ax1.plot(avg_profit[avail_index],servers_no_range[avail_index],'go')
-ax1.annotate((int(avg_profit[avail_index]),servers_no_range[avail_index]), \
-             xy=(avg_profit[avail_index],servers_no_range[avail_index]),xytext=(avg_profit[avail_index]-600,servers_no_range[avail_index]), \
-             arrowprops=dict(facecolor='black', shrink=0.05)) #
-
-ax2.plot(avg_profit,avg_denials, 'b-')
-ax2.plot(max_profit,avg_denials[avg_profit.index(max_profit)],'ro')
-ax2.annotate((int(max_profit),int(avg_denials[avg_profit.index(max_profit)])), \
-             xy=(max_profit,avg_denials[avg_profit.index(max_profit)]), \
-             xytext=(max_profit-300,avg_denials[avg_profit.index(max_profit)]),arrowprops=dict(facecolor='black', shrink=0.05))
-
-ax1.set_xlabel('Avg total profit')
-ax1.set_ylabel('Number of oo-demand servers', color='g')
-ax2.set_ylabel('MM denials', color='b')
-
-plt.show()
 
 #%%
 #third scenario
@@ -235,6 +270,9 @@ else:
       final_result[0][0],"| avg amount of denials-of-access", final_result[0][1],
       "| availability ", final_result[0][2]*100,"% \nIn ",final_result[1],
       "simulations out of",n_of_sim,"availability condition of",availability_level,"was met.")
+    max_profit = max(avg_profit)
+    avail_index = avail.index(min([i for i in avail if i>availability_no_sim*n_of_sim]))
+    draw_plot_3()
 
 spot_min = np.sum(res[1])
 nod_min = np.sum(res[2])
@@ -244,32 +282,3 @@ print("---")
 print("Spot servers were working for", spot_min, "minutes (",float(spot_min)/sim_min*100,"% of simulation time)")
 print("Additional on demand servers were working for", nod_min, "minutes (",nod_min/sim_min*100,"% of simulation time)")
 print("For", sim_min-nod_min-spot_min, "minutes only 300 on-demand servers were working (",(sim_min-nod_min-spot_min)/sim_min*100,"% of simulation time)")
-
-
-max_profit = max(avg_profit)
-avail_index = avail.index(min([i for i in avail if i>availability_no_sim*n_of_sim]))
-
-#plot
-fig, ax1 = plt.subplots()
-
-plt.suptitle("\n".join(wrap('Third scenario: 300 reserved on-demand servers, spot instances only and on-demand servers when spot unavaible', 60)))
-
-max_profit = max(avg_profit)
-ax2 = ax1.twinx()
-ax1.plot(avg_profit,servers_no_range, 'g-')
-ax1.plot(max_profit,servers_no_range[avg_profit.index(max_profit)],'ro')
-ax1.annotate((int(max_profit),servers_no_range[avg_profit.index(max_profit)]),xy=(max_profit,servers_no_range[avg_profit.index(max_profit)]),xytext=(max_profit-700,servers_no_range[avg_profit.index(max_profit)]),arrowprops=dict(facecolor='black', shrink=0.05))
-ax1.plot(avg_profit[avail_index],servers_no_range[avail_index],'go')
-ax1.annotate((int(avg_profit[avail_index]),servers_no_range[avail_index]), \
-             xy=(avg_profit[avail_index],servers_no_range[avail_index]),xytext=(avg_profit[avail_index]-650,servers_no_range[avail_index]), \
-             arrowprops=dict(facecolor='black', shrink=0.05)) #
-
-ax2.plot(avg_profit,avg_denials, 'b-')
-ax2.plot(max_profit,avg_denials[avg_profit.index(max_profit)],'ro')
-ax2.annotate((int(max_profit),int(avg_denials[avg_profit.index(max_profit)])),xy=(max_profit,avg_denials[avg_profit.index(max_profit)]),xytext=(max_profit-700,avg_denials[avg_profit.index(max_profit)]),arrowprops=dict(facecolor='black', shrink=0.05))
-
-ax1.set_xlabel('Avg total profit')
-ax1.set_ylabel('Number of oo-demand servers', color='g')
-ax2.set_ylabel('MM denials', color='b')
-
-plt.show()
