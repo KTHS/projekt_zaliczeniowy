@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
-# rynek serwerow c3.4xlarge jest niepłynny -> zamieniłam na c4.4xlarge
+"""
+@author: Kamila Kitowska, Katarzyna Pękala
+"""
 
 # %%
 import boto.ec2
@@ -23,7 +25,7 @@ for h in history:
 """
 # %%
 import csv
-ofile =  open('d:/Big Data/projekt zaliczeniowy Python/ceny_spot.txt', "w")
+ofile =  open('ceny_spot.txt', "w")
 ofilewriter = csv.writer(ofile, delimiter='\t')
 ofilewriter.writerow(['time','zone','type','price'])
 for h in history:
