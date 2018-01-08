@@ -64,6 +64,8 @@ def first_scenario(start,end,demand_avg,demand_std_dev,n_of_sim,ec2_od_new,
     user_demand = np.ceil(user_demand)
     user_demand = np.reshape(user_demand, (n_of_sim, sim_length_minutes))   
     servers_capacity = np.full(sim_length_minutes, ec2_od*users_per_server+ec2_od_new*users_per_server) #server "capacity", in users, per minute
+    servers_capacity[0] = ec2_od*users_per_server # two minutes for startup
+    servers_capacity[1] = ec2_od*users_per_server # two minutes for startup
     results = []
     #costs
     server_costs_hour = ec2_price_od_old * ec2_od + ec2_od_new * ec2_price_od #price of old and new servers, per hour
