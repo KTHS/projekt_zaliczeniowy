@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Thu Nov 09 16:12:55 2017
-
-@author: kamila
+@author: Kamila Kitowska, Katarzyna Pękala
 
 """
 import datetime
